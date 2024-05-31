@@ -1,0 +1,204 @@
+---
+title: 'Intro to Baysian Modelling'
+date: '2023-01-06'
+categories: ['R', 'Baysian', 'models']
+description: 'This Post will introduce Baysian modelling. We will model the relationship between reading scores and math scores by using the PISA data from 2018.'
+execute: 
+  message: false
+  warning: false
+editor_options: 
+  chunk_output_type: console
+---
+
+### Post Overview
+
+-   In the first part of this Post, I will give a general introduction to the baysian approach to data anlysis and compare this approach to more common ways in frequentist statistics.
+
+-   Afterwards we will take those concepts and apply them in order to build a linear regression that models the relationship between German students reading and math scores.
+
+You will be able to perform every step on your own computer. The data we are using is a subsample of the PISA 2018 data, which we will access using the learningtower package. Although the 2022 data has just been released, there is yet no package that contains a subset of this data - for easier reproducebility we will therefore use the one of 2018.
+
+### Tools
+
+I will do the analysis using the tidyverse and brms, as well as tidybayes. brms is a great package for baysian moddelling that gives an interface similar to the one of lme4 (which is well known for its multilevel model capabilites). tidybayes allows us to visualise those models by using ggplot.
+
+Lets start by downloading the necessary packages as well as the data. The pisa_raw data file contains the subset of the 2018 PISA data from learningtower. Using some dplyr verbs we reduce the data to the one of the german students and slice a small sample of only 30 students.
+
+```{r}
+library(tidyverse)
+library(brms)
+library(tidybayes)
+library(learningtower) # PISA 2018 data
+
+pisa_ger_raw <- load_student("2018") %>% 
+ filter(country %in% "DEU") %>% 
+ filter(!is.na(escs)) %>% 
+ filter(!is.na(math))
+
+set.seed(6)
+pisa_ger <- pisa_ger_raw %>%
+ filter(school_id %in% c("27600214", "27600196", "27600204")) %>% 
+ select(math, escs) %>%
+ slice_sample(n = 100)
+
+```
+
+### Thinking Bayesian
+
+Why did I opt for such a compact sample size? This is precisely where Bayesian models excel, and I'll explain why.
+
+With large datasets frequentist machine learning tools allow us to use resampling strategies and training/test splits in order to evaluate how good configurations of models really perform on data they have not seen before. Therefore big data allows us to draw a relatively clear picture of our population and fit a model to those trends.
+
+In Frequentists statistics we assume that the Paramters of our model eg the Slope of our linear regression, are somewhat fixed before we even start modelling. Therefore our goal is to find its *true* *value*. Although you might argue that a true fixed parameter is only true and fixed in a abstract mathematical sense as its still a model and wont capture all that complexity of the real world - which makes it hard to interpret.
+
+However with small data sets these tools are usually limited and we might have a hard time finding our true parameter. With small data sets it is not given that the trends we fit our model to are really meaningful and represent the population. We therfore can not really make a certain guess what the slope between read and math scores look like.
+
+One Method Frequentists use to deal with this uncercenty is called confidence interval. Using those we can say that our true estimate for our slope is anywhere in the gray area, at least 95% of the time, if we repeated the experiment a eg. 100 times. However in 5% of the cases of the experiment it can be anywhere outside the gray area. This guess is still a bit vague, but at least we dont run into the ceavat of having the hit or miss guess.
+
+```{r}
+lm1 <- pisa_ger_raw %>% 
+ ggplot(aes(y = escs, x = math))+
+ geom_point()+
+ geom_smooth(method = "lm")+
+ xlim(150, 850)+
+ ylim(-5, 5)
+
+
+lm2 <- pisa_ger %>% 
+ ggplot(aes(y = escs, x = math))+
+ geom_point()+
+ geom_smooth(method = "lm")+
+ xlim(150, 850)+
+ ylim(-5, 5)
+
+ 
+cowplot::plot_grid(lm1, lm2)
+```
+
+```{r}
+pisa_ger_raw %>% 
+ mutate(math = scale(math)) %>% 
+ ggplot(aes(y = escs, x = math))+
+ geom_point()+
+ geom_smooth(method = "lm")
+```
+
+Bayesians are not fans of point estimates. Weather in the model nor in the data. Rather, they find limited value in them, as they perceive the world replete with uncertainty. To them, choosing a specific point as your estimate suggests a stark dichotomy: you're either spot on or wrong. But, if you consider a distribution of plausible values, your guess can be much more informed and nuanced.
+
+While the frequentists linear regression has one specific slope with an interval where the other slopes lie 95% of the time. The Bayesian Linear Regression will have a complete distribution of plausible slopes with different probabilities for each. In the end we are looking to define an Interval where a percentage of all plausible slopes lie.
+
+#### Uncercenty Intervals: Frequentists vs Bayesians
+
+-   Frequentitsts define a confidence interval where 95% of the time the true parameter estimate falls into - while 5% are outside of the interval. This means that Probabilites can only be interpreted to the (hypothetical) long run of repeated measurements. We cannot say that
+
+-   Bayesians define a credible interval that contains 95% off all plausible values and therfore we can say that our true value is contained in this interval with a probability of 95%
+
+### Example
+
+Consider, for example, determining the average reading score of all German students based on our sample of just 30. Techniques like bootstrapping might help us better understand our sample's distribution, but a significant caveat remains: our sample doesnt represent the population. This might be caused through only sampling from a specific school district or just having an unrepresentative sample by chance. Therein lies the risk of being misled by such a limited dataset. This might influence our models predictions and inference.
+
+```{r}
+library(ggdist)
+
+pisa_ger %>% 
+ ggplot(aes(x = math))+
+ stat_slab(aes(thickness = after_stat(pdf*n)), scale = 0.7,
+           fill = "#ee8577") +
+  stat_dotsinterval(side = "bottom",
+                    scale = 0.7,
+                    fill = "#ee8577")+
+ ylab("")+
+ xlab("PISA 2018 Math Scores of German Students: Random Sample n= 30")+
+ theme_minimal()+
+ theme(
+  strip.text.x = element_text(family = "Roboto", size = 10, face = "bold", color = "black"),
+  axis.line = element_line(colour = "#808080", linewidth = .3),
+  axis.text.x = element_text(family = "Roboto", size = 8, color = "#808080"),
+  axis.title.x = element_text(family = "Roboto", size = 8, color = "#808080"),
+  axis.text.y = element_blank(),
+  text = element_text(family = "Roboto", size = 10, color = "#808080"),
+  legend.title = element_text(family = "Roboto", size = 10, color = "#808080"),
+  legend.text = element_text(family = "Roboto", size = 10, color = "#808080"),
+  panel.grid.major.x = element_line(color = "#bfbfbf",
+                                    linewidth = .1),
+  panel.grid.minor.x = element_blank(),
+  panel.grid.minor.y = element_blank(),
+  panel.grid.major.y = element_blank(),
+  panel.background = element_blank(),
+  panel.border = element_blank(),
+  axis.line.x = element_line(size = .5, linetype = "solid", colour = "#bfbfbf"),
+  axis.line.y = element_blank()
+ )+
+ scale_fill_manual(values = c("prior" = "#ee8577",
+                              "likelihood" = "#ffbb44",
+                              "posterior" = "#859b6c"))
+```
+
+Bayesian Statistics allows us to adjust how much value we give to the data. By defining our prior assumptions we can decide how much we trust our data and incorperate prior knowledge and beliefs.
+
+In the case of a the reading test scores we might define a prior using a normal distribution. Why normal? - thats my assumption you could defenetly argue for another one. Maybe one with thicker tails as the tales of the normal distribution are really thin. But the normal distribution tends to appear a lot in nature. It is really simple and can be fully described by the mean and standard deviation. This makes it a handy tool
+
+If we set a prior for the reading test scores we might know from the OECD Website that the scores tend to be centered around 500 with a standard deviation of 100. We therfore have a lot of weight on reading scores around 500 (In detail exactly 95% within 2 standard deviations within both directions of the mean)
+
+Such a prior would look like this:
+
+If we are more sure about mean reading scores of our German students we might set a more narrow prior or if we are unsure a wider one.
+
+Priors therfore describe our untercertenty about our asumption by their shape. If you dont want to incoperate Asumptions you can also go with a flat prior. This gives the same probaility to all the values in specific. However this is usually not a good choice as priors can reduce the overfitting of our model. Giving our model a
+
+```{r}
+m <- brm(math ~ 1,
+         prior = c(prior(normal(500, 100), class = Intercept),
+                   prior(normal(100, 10), class = sigma)),
+         data = pisa_ger,
+         iter = 4000, warmup = 1000, chains = 4, cores = 4,
+         seed = 4,
+         sample_prior = TRUE)
+
+
+draws_mcmc <- m %>%
+ spread_draws(b_Intercept, sigma, prior_sigma, prior_Intercept,
+              ndraws = 1000)
+
+tibble(grid = seq(0,900, by = .1),
+       prior = dnorm(grid,
+                     median(draws_mcmc$prior_Intercept),
+                     median(draws_mcmc$prior_sigma)),
+       likelihood = dnorm(grid, median(pisa_ger$math),
+                          sd(pisa_ger$read)),
+       posterior = dnorm(grid,
+                         median(draws_mcmc$b_Intercept),
+                         median(draws_mcmc$sigma))
+       ) %>%
+ pivot_longer(2:4, names_to = "type", values_to = "plausibility") %>%
+ mutate(type = as.factor(type)) %>%
+ # filter(type %in% c("prior", "likelihood", "posterior")) %>%
+ ggplot(aes(y =  plausibility, x = grid, fill = type))+
+ geom_area(position = "identity", alpha = .7)+
+ xlab("PISA 2018 Math Score of German Students")+
+ xlim(0,1000)+
+ theme_minimal()+
+ theme(
+  strip.text.x = element_text(family = "Roboto", size = 10, face = "bold", color = "black"),
+  axis.line = element_line(colour = "#808080", linewidth = .3),
+  axis.text.x = element_text(family = "Roboto", size = 8, color = "#808080"),
+  axis.title.x = element_text(family = "Roboto", size = 8, color = "#808080"),
+  axis.text.y = element_blank(),
+  text = element_text(family = "Roboto", size = 10, color = "#808080"),
+  legend.title = element_text(family = "Roboto", size = 10, color = "#808080"),
+  legend.text = element_text(family = "Roboto", size = 10, color = "#808080"),
+  panel.grid.major.x = element_line(color = "#bfbfbf",
+                                    linewidth = .1),
+  panel.grid.minor.x = element_blank(),
+  panel.grid.minor.y = element_blank(),
+  panel.grid.major.y = element_blank(),
+  panel.background = element_blank(),
+  panel.border = element_blank(),
+  axis.line.x = element_line(size = .5, linetype = "solid", colour = "#bfbfbf"),
+  axis.line.y = element_blank()
+ )+
+ scale_fill_manual(values = c("prior" = "#ee8577",
+                              "likelihood" = "#ffbb44",
+                              "posterior" = "#859b6c"))
+
+```

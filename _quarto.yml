@@ -1,20 +1,26 @@
+
 project:
   type: website
 
+freeze: true
+
 website:
-  title: "Hendriks Scripts"
+  title: "probably wrong"
+
   navbar:
+    pinned: true
+
     right:
-      - text: Blog
-        href: blog.qmd
-      - icon: github
-        href: https://github.com/hendr1km
+    - text: About
+      href: about.qmd
+    - icon: github
+      href: https://github.com/hendr1km
+
 format:
   html:
     theme:
-    - cosmo
-    - theme.scss
-    css: styles
+      light: [cosmo, styles/light.scss]
+      dark: [cosmo, styles/dark.scss]
 
 editor: visual
 
