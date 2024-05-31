@@ -2,8 +2,7 @@
   {
     "listing": "/index.html",
     "items": [
-      "/posts/weights/logistic_sim.html",
-      "/posts/weights/logistic_sim.knit.html"
+      "/posts/weights/logistic_sim.html"
     ]
   }
 ]
