@@ -66,7 +66,7 @@ df_ab %>%
   guides(fill = "none")
 
 ```
-## simulating imbalance
+## Simulating imbalance
 
 To get an idea on how sample weights effect the logistic regression outcomes, we generate some simulations from our fictional population under different conditions. Each sample will consist of 400 samples with N = 400 drawing from our population.
 
@@ -158,7 +158,7 @@ summarise(alpha.median = median(alpha),
   blog_theme()
 
 ```
-## relationship between odds and weights
+## Relationship between odds and weights
 
 But how do we determine the appropriate weight to choose?
 
@@ -198,7 +198,7 @@ model_estimates <- read_rds("model_estimates.rds")
 ```
 
 
-## evaluating parameter estimates for different odds and weights
+## Evaluating parameter estimates for different odds and weights
 
 We assess the performance of each model by examining the median error at different values of our variable of interest—the mean of both groups and the midpoint value between these means. Our findings indicate that the median error tends to decrease up to a certain weight threshold, after which it tends to increase again.
 
@@ -241,7 +241,7 @@ pred_bench %>%
   labs(col = "value")
 
 ```
-## choosing weights
+## Choosing weights
 
 This threshold seems to be closely related to the odds ratio. Thus, choosing the assumed imbalance of the odds as the weight is particularly beneficial, especially for lower imbalances. However, deviations at higher imbalances may also be due to the uncertainty of estimates as the sample size for the minority group decreases. As the odds increase, the need for precise weight selection becomes less critical compared to using the unbalanced model.
 
@@ -274,7 +274,7 @@ pred_nh %>%
   blog_theme()+
   labs(fill = "improvement to\nunbalanced model")
 ```
-## conclusion
+## Conclusion
 
 Weights are a practical approach to address data imbalances that don't reflect the actual odds in the population. But, it’s important to adjust these weights carefully, based on what we know about the population to get better results. Also, it’s good to recognize that natural class imbalances in your data should be seen as normal features, not issues to be fixed.
 

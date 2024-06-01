@@ -193,7 +193,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <section id="simulating-imbalance" class="level2">
-<h2 class="anchored" data-anchor-id="simulating-imbalance">simulating imbalance</h2>
+<h2 class="anchored" data-anchor-id="simulating-imbalance">Simulating imbalance</h2>
 <p>To get an idea on how sample weights effect the logistic regression outcomes, we generate some simulations from our fictional population under different conditions. Each sample will consist of 400 samples with N = 400 drawing from our population.</p>
 <ol type="1">
 <li><p><strong>Balanced Dataset:</strong> Each sample will have a 1:1 ratio of our two classes.</p></li>
@@ -277,7 +277,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </section>
 <section id="relationship-between-odds-and-weights" class="level2">
-<h2 class="anchored" data-anchor-id="relationship-between-odds-and-weights">relationship between odds and weights</h2>
+<h2 class="anchored" data-anchor-id="relationship-between-odds-and-weights">Relationship between odds and weights</h2>
 <p>But how do we determine the appropriate weight to choose?</p>
 <p>To explore this, we experiment with all possible combinations of odds and weights ranging from 1 to 20 in our fictional population. We employ the <code>logistic_sim</code> function again to estimate our median parameters under each combination.</p>
 <p>This approach allows us to systematically assess how different weights influence the logistic regression model’s ability to handle varying levels of class imbalance.</p>
@@ -315,7 +315,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="evaluating-parameter-estimates-for-different-odds-and-weights" class="level2">
-<h2 class="anchored" data-anchor-id="evaluating-parameter-estimates-for-different-odds-and-weights">evaluating parameter estimates for different odds and weights</h2>
+<h2 class="anchored" data-anchor-id="evaluating-parameter-estimates-for-different-odds-and-weights">Evaluating parameter estimates for different odds and weights</h2>
 <p>We assess the performance of each model by examining the median error at different values of our variable of interest—the mean of both groups and the midpoint value between these means. Our findings indicate that the median error tends to decrease up to a certain weight threshold, after which it tends to increase again.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| code-fold: true</span></span>
@@ -359,7 +359,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </section>
 <section id="choosing-weights" class="level2">
-<h2 class="anchored" data-anchor-id="choosing-weights">choosing weights</h2>
+<h2 class="anchored" data-anchor-id="choosing-weights">Choosing weights</h2>
 <p>This threshold seems to be closely related to the odds ratio. Thus, choosing the assumed imbalance of the odds as the weight is particularly beneficial, especially for lower imbalances. However, deviations at higher imbalances may also be due to the uncertainty of estimates as the sample size for the minority group decreases. As the odds increase, the need for precise weight selection becomes less critical compared to using the unbalanced model.</p>
 <p>For lower odds, there’s a tolerance for selecting an incorrect weight. For example, in our specific simulation, at odds of 1:2, the weight estimate could vary from 2 weights off to 19 off, depending on the predictor value, and still provide more precise estimates than the unweighted model. However, while there seems to be some tolerance, it’s important to note that no broad generalizations should be drawn from our simplified simulation.</p>
 <div class="cell">
@@ -393,7 +393,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </section>
 <section id="conclusion" class="level2">
-<h2 class="anchored" data-anchor-id="conclusion">conclusion</h2>
+<h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
 <p>Weights are a practical approach to address data imbalances that don’t reflect the actual odds in the population. But, it’s important to adjust these weights carefully, based on what we know about the population to get better results. Also, it’s good to recognize that natural class imbalances in your data should be seen as normal features, not issues to be fixed.</p>
 <p>Comparing different models, with and without weight adjustments, especially in terms of their predictive accuracy, can be quite helpful. Just keep in mind, our simple simulation doesn’t cover all the bases. So, when you’re doing your research, make sure to take into account the specific factors relevant to your field, as the literature suggests.</p>
 
