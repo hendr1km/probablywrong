@@ -20,7 +20,6 @@ format:
   html:
     theme:
       light: [cosmo, styles/light.scss]
-      dark: [cosmo, styles/dark.scss]
 
 editor: visual
 
