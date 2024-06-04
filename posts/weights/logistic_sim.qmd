@@ -1,8 +1,8 @@
 ---
-title: 'Exploring weights in logistic regression'
-date: '2024-05-26'
+title: 'Exploring frequency weights in logistic regression'
+date: '2024-06-04'
 categories: ['R', 'modelling']
-description: 'Weights can be used in logistic regression to deal with class imbalance. In this post, we use simulations to estimate the costs and benefits of this approach.'
+description: 'Frequency weights can be used in logistic regression to address class imbalance caused by sampling bias. In this post, we will use simulations to explore how to effectively choose weights and visually understand the benefits of this approach.'
 execute: 
   freeze: auto
   message: false
@@ -46,12 +46,12 @@ blog_theme <- function() theme(
 
 ```
 
-In Logistic Regression, we estimate a linear model for the log odds of observing an event across different levels of our predictor. These log odds can be transformed into probabilities, which then create the characteristic S-curve.
+In logistic regression, we estimate a linear model for the log odds of observing an event at different levels of our predictor. These log odds can be transformed into probabilities, which then produce the characteristic S-curve.
 
-At the core, it all boils down to odds. Having odds of 1:1 in our underlying data generating process means both events are generally equally likely to occur, each with a probability of 50%.
-Our fictional population for the simulation follows this setup, where the probabilities of our events are dependent on values drawn from normal distributions for both groups, each with a mean of 5 and 8 and a standard deviation of 1.
+In essence, it all comes down to odds. Having odds of 1:1 in our underlying data generation process means that both events are equally likely to occur, each with a probability of 50%.
+Our fictional population for the simulation follows this setup, with the probabilities of our events depending on values from normal distributions for both groups, with means of 5 and 8 and standard deviations of 1.
 
-```{r, dev='svg', dev.args=list(bg="transparent")}
+```{r}
 library(tidyverse)
 
     a <- tibble(value = rnorm(4000, 5, 1), condition = "a")
@@ -68,19 +68,21 @@ df_ab %>%
 ```
 ## Simulating imbalance
 
-To get an idea on how sample weights effect the logistic regression outcomes, we generate some simulations from our fictional population under different conditions. Each sample will consist of 400 samples with N = 400 drawing from our population.
 
-1. **Balanced Dataset:** Each sample will have a 1:1 ratio of our two classes.
+To get an idea of how frequency weights affect the logistic regression results, we will generate some simulations from our fictitious population under different conditions. Each simulation will consist of 400 samples, with each N = 400 values drawn from our population. 
 
-2. **Unbalanced Dataset:** Each sample will have a 1:4 ratio, representing a class imbalance.
+1. **Balanced dataset:** Each sample will have a 1:1 ratio of our two classes and represent the proportions in the population.
 
-3. **Weighted Unbalanced Dataset:** Similar to the unbalanced dataset, but here each sample in the minority class will be assigned a weight of 4 to counteract the imbalance.
+2. **Unbalanced dataset:** Each sample will have a 1:4 ratio, representing an imbalance between the classes caused by some sort of sampling bias, where where one group is underrepresented in the sample, compared to the population.
 
-For each sample under these conditions, we will perform a logistic regression using the `logistic_sim` function on each sample.
+3. **Weighted unbalanced dataset:** Similar to the unbalanced dataset, but here each observation in the underrepresented class is given a weight of 4 to counteract the imbalance.
 
-Afterwards we will compute the median of the estimated parameters (e.g., coefficients and intercepts) from each condition to get a robust measure of central tendency, less affected by outliers than the mean. 
+For each sample under these conditions we will run a logistic regression using the `logistic_sim` function on each sample.
+
+We will then compute the median of the estimated parameters (e.g. coefficients and intercepts) from each condition in order to obtain a robust measure of central tendency.
 
 Finally, we will aggregate these median parameter estimates across all conditions into a single logistic regression model for each condition. 
+
 
 ::: {.panel-tabset}
 
@@ -138,9 +140,9 @@ weighted_estimates <- logistic_sim(400, a_n = 67, b_n = 333, weight = 4) %>%
 ```
 :::
 
-As we can see, the estimates from the unbalanced model are quite off compared to those from the balanced one. It appears that the intercept is especially affected, while the slope seems relatively similar, though all estimated probabilities are nonetheless influenced.
+As we can see, the unbalanced model underestimates the first group compared to the balanced model. It seems that the intercept is particularly affected, while the slope is relatively similar. However, all the estimated probabilities are affected.
 
-The unbalanced model that used weights does not seem too much off. Assuming that our two events are equally likely in our population, but our sample is biased, choosing the right weight might be a solution.
+Assuming that our balanced model is the closest estimate we can get of our population, the unbalanced model that used weights seems to be better fitted. Assuming that our two events are generally equally likely to occur in our population, but our sample is biased, we might be interested in adjusting these estimates using frequency weights.
 
 ```{r}
 
@@ -160,11 +162,9 @@ summarise(alpha.median = median(alpha),
 ```
 ## Relationship between odds and weights
 
-But how do we determine the appropriate weight to choose?
+But how do we determine an appropriate frequency weight?
 
-To explore this, we experiment with all possible combinations of odds and weights ranging from 1 to 20 in our fictional population. We employ the `logistic_sim` function again to estimate our median parameters under each combination.
-
-This approach allows us to systematically assess how different weights influence the logistic regression model’s ability to handle varying levels of class imbalance.
+To explore this, we experiment with all possible combinations of odds and weights from 1 to 20 in our fictional population. Again, we use the `logistic_sim` function to estimate our median parameters under each combination.
 
 ```{r}
 
@@ -200,10 +200,9 @@ model_estimates <- read_rds("model_estimates.rds")
 
 ## Evaluating parameter estimates for different odds and weights
 
-We assess the performance of each model by examining the median error at different values of our variable of interest—the mean of both groups and the midpoint value between these means. Our findings indicate that the median error tends to decrease up to a certain weight threshold, after which it tends to increase again.
+We can evaluate the performance of each model by looking at the median error at different values of our variable of interest - the mean of the two groups and the midpoint between these means. As you can see in the graph, at the critical value of 6.5, the median error tends to decrease up to a certain weight threshold, after which it increases again. So even in such a simple example, weights only help to a certain extent and must be used with caution. 
 
-```{r, dev='svg', dev.args=list(bg="transparent")}
-
+```{r}
 #| code-fold: true
 
 pred <- model_estimates %>%
@@ -243,9 +242,7 @@ pred_bench %>%
 ```
 ## Choosing weights
 
-This threshold seems to be closely related to the odds ratio. Thus, choosing the assumed imbalance of the odds as the weight is particularly beneficial, especially for lower imbalances. However, deviations at higher imbalances may also be due to the uncertainty of estimates as the sample size for the minority group decreases. As the odds increase, the need for precise weight selection becomes less critical compared to using the unbalanced model.
-
-For lower odds, there's a tolerance for selecting an incorrect weight. For example, in our specific simulation, at odds of 1:2, the weight estimate could vary from 2 weights off to 19 off, depending on the predictor value, and still provide more precise estimates than the unweighted model. However, while there seems to be some tolerance, it's important to note that no broad generalizations should be drawn from our simplified simulation.
+The threshold with the most balanced estimates seems to be closely related to the odds ratio. Thus, choosing the assumed imbalance of the odds as the weight may be the most appropriate, especially for smaller imbalances. At least in our simple setup. However, deviations for higher imbalances may also be due to the uncertainty of the estimates as the sample size for the minority group decreases. As the odds increase, almost any weight seems to produce more appropriate estimates than the unbalanced model where we did not adjust for sampling bias.
 
 ```{r}
 
@@ -276,6 +273,4 @@ pred_nh %>%
 ```
 ## Conclusion
 
-Weights are a practical approach to address data imbalances that don't reflect the actual odds in the population. But, it’s important to adjust these weights carefully, based on what we know about the population to get better results. Also, it’s good to recognize that natural class imbalances in your data should be seen as normal features, not issues to be fixed.
-
-Comparing different models, with and without weight adjustments, especially in terms of their predictive accuracy, can be quite helpful. Just keep in mind, our simple simulation doesn’t cover all the bases. So, when you’re doing your research, make sure to take into account the specific factors relevant to your field, as the literature suggests.
+Depending on the scenario, weights may be helpful to deal with sampling bias and class imbalance that does not reflect the population (at least in a simple setup, like the one we worked with). However, they should be used with prior knowledge of the population to not overadjust the sampling bias. One solution might be to adjust the observed odds by the expected odds ratio in the population, in the group affected by the sampling bias. The natural class imbalance should also be maintained in the logistic regression unless you have good reasons not to. 
