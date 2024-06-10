@@ -1,5 +1,7 @@
 /*-- scss:defaults --*/
 
+@import url('https://fonts.googleapis.com/css2?family=Inclusive+Sans:ital@0;1&display=swap');
+
 // background colors 
 $body-bg: #fcfaf7;
 $navbar-bg: #fcfaf7;
@@ -17,9 +19,7 @@ h1, h2, h3, h4, h5, h1.title, .title.h1 {
 }
 
 // Fonts
-$headings-font-family:   'Charter', 'Source Sans Pro', 'Roboto';
-$font-family-base:  'Inclusive Sans', 'Source Sans Pro', 'Roboto', 'Merriweather', 'Roboto Regular', 'Cabin Regular';
-
-
+$headings-font-family: 'Inclusive Sans' ;
+$font-family-base: 'Inclusive Sans';
 
 
