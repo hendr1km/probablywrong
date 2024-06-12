@@ -1,7 +1,7 @@
 ---
 title: 'Correlation Networks in R'
 date: '2024-06-12'
-categories: ['R', 'Visualisation']
+categories: ['R', 'Visualisation', 'Tutorial']
 description: 'Plotting correlations as networks can give you a good idea of the interconnectivity of your variables. This is a quick tutorial on how to create correlation networks in R.'
 execute: 
   freeze: auto
@@ -17,7 +17,7 @@ knitr:
 image: network.png
 ---
 
-To create a correlation network, we will use the BFI data from the Psych library. First we will import all the necessary packages and set the font for our plot. We can import these from our system using extrafont. In the next step we will do a quick clean up of our data to include only the columns we want to visualise.
+To create a correlation network, we will use the BFI data from the `{psych}` package. First we will import all the necessary packages and set the font for our plot. We can import these from our system using extrafont. In the next step we will do a quick clean up of our data to include only the columns we want to visualise.
 
 ```{r}
 library(tidyverse)
