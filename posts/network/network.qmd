@@ -44,7 +44,7 @@ graph_data <- df %>%
 	filter(abs(r) > .2)
 ```
 
-The last step is to build our visualisation. The font variable is the one we set above. This diagram allows you to adjust all the settings you are interested in, such as the size or colour of the nodes. These are your points representing your elements). Feel free to adjust these settings.
+The last step is to build our visualisation. The font variable is the one we set above. This diagram allows you to adjust all the settings you are interested in, such as the size or colour of the nodes. These are your points representing your elements. Feel free to adjust these settings.
 
 ```{r}
 graph_data %>%
