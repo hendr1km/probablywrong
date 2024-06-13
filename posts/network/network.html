@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="dcterms.date" content="2024-06-12">
-<meta name="description" content="Plotting correlations as networks can give you a good idea of the interconnectivity of your variables. This is a quick tutorial on how to create correlation networks in R.">
+<meta name="description" content="Plotting correlations as networks can give you a good first impression of the interconnectivity of your variables. This is a quick tutorial on how to create correlation networks in R.">
 
 <title>probably wrong - Correlation Networks in R</title>
 <style>
@@ -150,7 +150,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <div>
   <div class="description">
-    Plotting correlations as networks can give you a good idea of the interconnectivity of your variables. This is a quick tutorial on how to create correlation networks in R.
+    Plotting correlations as networks can give you a good first impression of the interconnectivity of your variables. This is a quick tutorial on how to create correlation networks in R.
   </div>
 </div>
 
@@ -171,7 +171,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 </header>
 
-<p>To create a correlation network, we will use the BFI data from the <code>{psych}</code> package. First we will import all the necessary packages and set the font for our plot. We can import these from our system using extrafont. In the next step we will do a quick clean up of our data to include only the columns we want to visualise.</p>
+<p>To create a correlation network, we will use the BFI personality data from the <code>{psych}</code> package. First we will import all the necessary packages and set the font for our plot. We can import these from our system using extrafont. In the next step we will do a quick clean up of our data to include only the columns we want to visualise.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggraph)</span>
@@ -185,14 +185,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>() <span class="sc">%&gt;%</span></span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span><span class="fu">c</span>(age, education, gender))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>The <code>correlate()</code> function from the <code>{corrr}</code> package allows us to define a specific correlation. However, we will use the Pearson correlation as the default. Next, we will only keep correlations higher than .2 or lower than -.2. This is something to play around with. Depending on how many variables you have in your data, your plot could get really messy if you include all the possible relationships between your variables.</p>
+<p>The <code>correlate()</code> function from the <code>{corrr}</code> package allows us to define a specific correlation. However, we will use the Pearson correlation as the default setting. Next, we will switch to a long format using <code>stretch()</code> and only keep correlations higher than .2 or lower than -.2. This is something to play around with. Depending on how many variables you have in your data, your plot could get really messy if you include all the possible relationships between your variables.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>graph_data <span class="ot">&lt;-</span> df <span class="sc">%&gt;%</span> </span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    corrr<span class="sc">::</span><span class="fu">correlate</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stretch</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>   corrr<span class="sc">::</span><span class="fu">stretch</span>() <span class="sc">%&gt;%</span> </span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(<span class="fu">abs</span>(r) <span class="sc">&gt;</span> .<span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>The last step is to build our visualisation. The font variable is the one we set above. This diagram allows you to adjust all the settings you are interested in, such as the size or colour of the nodes. These are your points representing your elements. Feel free to adjust these settings.</p>
+<p>The last step is to build our visualisation. The font variable is the one we set above. In comparison to out of the box tools, this approach with <code>{ggraph}</code> and <code>{igraph}</code> allows us to adjust all the settings you are interested in, such as the size or colour of the nodes. We might also choose a different color scaling, for example if we only include postive correllations. In this specific example, I changed the background color to transparent.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>graph_data <span class="sc">%&gt;%</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">graph_from_data_frame</span>(<span class="at">directed =</span> <span class="cn">FALSE</span>) <span class="sc">%&gt;%</span></span>
