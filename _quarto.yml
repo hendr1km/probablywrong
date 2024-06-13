@@ -16,6 +16,16 @@ website:
     - icon: github
       href: https://github.com/hendr1km
 
+  page-footer: 
+    left: |
+      “All models are wrong, but some are useful” - George E. P. Box
+    center: 
+       - text: "About"
+         href: about.qmd
+    right:
+      - icon: github
+        href: https://github.com/hendr1km
+
 format:
   html:
     theme:
