@@ -5,8 +5,11 @@ project:
 freeze: true
 
 website:
-  google-analytics: "G-3CMB0C0E8X"
   cookie-consent: true
+  google-analytics:
+    tracking-id: "G-3CMB0C0E8X"
+    anonymize-ip: true
+
   title: "probably wrong"
 
   navbar:
