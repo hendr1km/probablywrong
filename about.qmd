@@ -4,11 +4,11 @@ image: profile.jpg
 about:
   template: jolla
   links:
-    - icon: github
-      text: Github
-      href: https://github.com
-   # - text: Research Gate
-   #   href: https://www.researchgate.net/profile/Hendrik-Mann
+    - icon: bar-chart 
+      text: Explore Posts 
+      href: https://probablywrong.de
+    # - text: Research Gate
+    #  href: https://www.researchgate.net/profile/Hendrik-Mann
 ---
 
 Hey, I'm Hendrik. Currently in my master's studies in primary education, I also work as a Research Assistant in Clinical Child and Adolescent Psychology and Psychotherapy at the University of Wuppertal. This blog is my space to share everything that fascinates me about R and quantitative research methods
