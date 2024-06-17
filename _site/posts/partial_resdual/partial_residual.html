@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="dcterms.date" content="2024-06-15">
-<meta name="description" content="Partial residual plots can tell you how you should adjust your model and even if have you have missed something. They are especially useful to spot interactions in your data. In this post we will look at some handy ways you can them and create PSP with tidy tools">
+<meta name="description" content="Partial residual plots can give you valuble information about your model and relationships in the data like interactions and nonlinear trends. In this post we look at use cases and different ways PRP can be created in ggplot.">
 
 <title>probably wrong - Introduction to partial residual plots</title>
 <style>
@@ -171,12 +171,13 @@ cookieconsent.run({
   <div class="quarto-categories">
     <div class="quarto-category">R</div>
     <div class="quarto-category">modelling</div>
+    <div class="quarto-category">visualisation</div>
   </div>
   </div>
 
 <div>
   <div class="description">
-    Partial residual plots can tell you how you should adjust your model and even if have you have missed something. They are especially useful to spot interactions in your data. In this post we will look at some handy ways you can them and create PSP with tidy tools
+    Partial residual plots can give you valuble information about your model and relationships in the data like interactions and nonlinear trends. In this post we look at use cases and different ways PRP can be created in ggplot.
   </div>
 </div>
 
@@ -197,24 +198,21 @@ cookieconsent.run({
 
 </header>
 
-<section id="what-we-have-missed" class="level1">
-<h1>What we have missed</h1>
-<p>In a PRP we plot the residuals or error of our Regression model against one or more independant variables. This allows us a couple of things - starting with the first one: discovering non randomness in the residuals. Why is non randomness an issue? When doing a Regression, we assume that we have got some error as jitter around our predictions that does not contain any remaining trend. This error is caused by all that stuff we do not know about our independent variable and can not model. Theory assumes, that if we had all the variables in the iniverse with a causal relationship to our independent variable , we could make predictions without any error. However this is fictional and error is part of our complex reality, that we can only approxiamte using such a naive linear representation of the world. It is only a problem if our error is not random, because then there is some sort of trend or pattern left in the data that we could have modeled with our variables. In practice this can appear if there is some sort of non linear trend in our data or interactions of variables, that we need to include in our model.</p>
-<p>In the following example we will start by visualising the residuals from our regression using broom and ggplot by plotting those against one of our independent variable used in the model.</p>
-<p>Through the use of <code>geom_smooth</code>regression lines we can spot remaining trends in our residuals. The blue regression line is our helper tool to spot those. Keep in mind that we want to have a intercept and slope of approximaetly zero - this means there is no trend left. The red line represents the predictions of our model. In the standard <code>broom::augment()</code> output those are scaled to 0 when plotting our residuals.</p>
-<p>In the following plot you can see that both lines are approximately on the same slope, indicating that we did not spot any remaining trends in the residual that our model did not catch. At least regarding the variable x3.</p>
+<section id="what-we-missed" class="level1">
+<h1>What we missed</h1>
+<p>In a PRP, we plot the residuals, or error, of our regression model against one or more independent variables. This allows us to do a number of things - starting with the first: detect non-randomness in the residuals. Why is non-randomness important? When we run a regression, we assume that we have some error in the form of jitter around our predictions, which does not include any residual trend. This error is caused by all the things we do not know about our independent variable and cannot model. The theory assumes that if we had all the variables in the universe with a causal relationship to our independent variable, we could make predictions without error. However, this is fictional and error is part of our complex reality, which we can only approximate using such a naive linear representation of the world. It is only a problem when our error is not random, because then there is still some sort of trend or pattern in the data that we could have modelled with our variables. In practice, this can happen if there is some sort of non-linear trend in our data or interactions of variables that we need to include in our model.</p>
+<p>In the following example we will first visualise the residuals from our regression using broom and ggplot by plotting them against one of our independent variables used in the model.</p>
+<p>By using <code>geom_smooth</code> regression lines we can see the remaining trends in our residuals. The blue regression line is our tool for spotting these. Note that we want the intercept and slope to be approximately zero - this means there is no trend left. The red line represents the predictions of our model.</p>
+<p>In the following plot you can not see the blue line, because they are exactly the same slope, which means that we have not detected any residual trends that our model has not picked up. At least for the variable x2.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>m0 <span class="ot">&lt;-</span> <span class="fu">lm</span>(y0 <span class="sc">~</span> x1 <span class="sc">+</span> x2 <span class="sc">+</span> x3)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>m0 <span class="sc">%&gt;%</span></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  broom<span class="sc">::</span><span class="fu">augment</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">x3 =</span> dvmisc<span class="sc">::</span><span class="fu">quant_groups</span>(x3, <span class="dv">3</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="fu">c</span>(x1,x2)) <span class="sc">%&gt;%</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> value, <span class="at">y =</span> .resid))<span class="sc">+</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>()<span class="sc">+</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>)<span class="sc">+</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="fu">aes</span>(<span class="at">x =</span> value, <span class="at">y =</span> <span class="dv">0</span>), <span class="at">method =</span> <span class="st">"lm"</span>, <span class="at">color =</span> <span class="st">"red"</span>)<span class="sc">+</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_grid</span>(<span class="fu">vars</span>(name), <span class="fu">vars</span>(x3))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> x2, <span class="at">y =</span> .resid))<span class="sc">+</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>()<span class="sc">+</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>)<span class="sc">+</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="fu">aes</span>(<span class="at">x =</span> x2, <span class="at">y =</span> <span class="dv">0</span>), <span class="at">method =</span> <span class="st">"lm"</span>, <span class="at">color =</span> <span class="st">"red"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <p><img src="partial_residual_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid" width="672"></p>
 </div>
@@ -229,8 +227,7 @@ cookieconsent.run({
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlim</span>(<span class="fu">c</span>(<span class="dv">50</span>,<span class="dv">190</span>))<span class="sc">+</span></span>
 <span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>()<span class="sc">+</span></span>
 <span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>)<span class="sc">+</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="fu">aes</span>(<span class="at">x =</span> x2, <span class="at">y =</span> <span class="dv">0</span>), <span class="at">method =</span> <span class="st">"lm"</span>, <span class="at">color =</span> <span class="st">"red"</span>)<span class="sc">+</span></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylab</span>(<span class="st">"residuals of y_ac ~ x1 + x2 + x3"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="fu">aes</span>(<span class="at">x =</span> x2, <span class="at">y =</span> <span class="dv">0</span>), <span class="at">method =</span> <span class="st">"lm"</span>, <span class="at">color =</span> <span class="st">"red"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <p><img src="partial_residual_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid" width="672"></p>
 </div>
@@ -238,7 +235,7 @@ cookieconsent.run({
 </section>
 <section id="spotting-interactions" class="level1">
 <h1>Spotting Interactions</h1>
-<p>In the plots above we only looked at one variable of our model. However we do have multiple variables in our model and we might be interested in looking at them all. One way of doing this is pivoting the data into a long format and visualising those in a grid. Now we can spot non linear trends all of our predictor variables. In the following plot we can see that the residuals for x1 and x3 do not contain any unmodelled information, while the residualds for x2 does.</p>
+<p>In the plots above we have only looked at one variable in our model. However, we have several variables in our model and we may be interested in looking at them all. One way to do this is to pivot the data into a long format and plot them on a grid. In the following plot we can see that the residuals for x1 and x3 do not contain any unmodelled information, while the residuals for x2 do.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>m1 <span class="ot">&lt;-</span> <span class="fu">lm</span>(y_ac <span class="sc">~</span> x1 <span class="sc">+</span> x2 <span class="sc">+</span> x3)</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -255,8 +252,8 @@ cookieconsent.run({
 <p><img src="partial_residual_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
-<p>However in this can we only plotted our predictor variables against the residuals of our model and thus our response variable. To spot how our predictor variables relate to each other we might want to plot those against echt other as well. One way of doing this is plotting those as binned into quantiles in our grid. We can do this using the function <code>dvmisc::quant_groups()</code> and sort the values of x3 into 3 bins based on our quantiles.</p>
-<p>This allows us to spot interactions between our variables x3 and and x1 or x2 that are not in our model. In this plot you can see that the relationship between x1 and y changes at different qunatiles of x3. For lower values of x3 there is a negative relationship between x1 and x3, while the relationship gets more positive with higher values. We can see that our model currently does not account for this interaction.</p>
+<p>However, in this case we have only plotted our predictor variables against the residuals of our model and thus against our response variable. To see how our predictor variables are related to each other, we might want to plot them against each other as well. One way to do this is to plot them binned into quantiles in our grid. We can do this using the function <code>dvmisc::quant_groups()</code> and sort the values of x3 into 3 bins based on our quantiles.</p>
+<p>This allows us to see interactions between our variables that are not in our model. In this plot you can see that the relationship between x1 and y changes at different quantiles of x3. At lower values of x3 there is a negative relationship between x1 and x3, while at higher values the relationship becomes more positive. We can see that our model does not currently account for this interaction.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>m1 <span class="ot">&lt;-</span> <span class="fu">lm</span>(y1 <span class="sc">~</span> x1 <span class="sc">+</span> x2 <span class="sc">+</span> x3)</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -274,144 +271,97 @@ cookieconsent.run({
 <p><img src="partial_residual_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
-<p>This method can also be used to spot three way interactions. If we already included a two way interaction and still see a change in the relationship of one variable there might be a additional interaction. In the following example we plotted x1 in our bins and thus can see how x2 and x3 vary for different quantiles of x1. We can see that there is no real trend left in the residuals when looking at x2 - we already included the interaction for x2 and x1. For x3 we can see that there is some pattern left and this trend in the residuals varys across x1.</p>
+<p>This method can also be used to detect three-way interactions. If we have already included a two-way interaction and still see a change in the relationship of one variable, there may be an additional interaction. In the following example, we have plotted x1 in our bins, so we can see how x2 and x3 vary for different quantiles of x1. We can see that there is no real trend left in the residuals when looking at x2 - we have already included the interaction for x2 and x1. For x3 we can see that there is some pattern left and this trend in the residuals varies over x1.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>x1 <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="dv">800</span>, <span class="dv">50</span>, <span class="dv">20</span>)</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>x2 <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="dv">800</span>, <span class="dv">80</span>, <span class="dv">40</span>)</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>x3 <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="dv">800</span>, <span class="dv">90</span>, <span class="dv">50</span>)</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>error <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="dv">800</span>, <span class="dv">0</span>, <span class="dv">500</span>)</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>y1 <span class="ot">&lt;-</span> <span class="dv">300</span> <span class="sc">-</span> (<span class="fl">0.2</span> <span class="sc">*</span> x1) <span class="sc">+</span> (<span class="fl">0.2</span> <span class="sc">*</span> x2) <span class="sc">+</span> (<span class="fl">0.2</span> <span class="sc">*</span> x1 <span class="sc">*</span> x2<span class="sc">*</span> x3) <span class="sc">+</span> error</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>m3 <span class="ot">&lt;-</span> <span class="fu">lm</span>(y1 <span class="sc">~</span> x1 <span class="sc">*</span> x2 <span class="sc">+</span> x3)</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(m3)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>
-Call:
-lm(formula = y1 ~ x1 * x2 + x3)
-
-Residuals:
-    Min      1Q  Median      3Q     Max 
--131705   -9143     270   10496  134970 
-
-Coefficients:
-              Estimate Std. Error t value Pr(&gt;|t|)    
-(Intercept) -71175.508   5705.903 -12.474   &lt;2e-16 ***
-x1            -158.603    104.089  -1.524    0.128    
-x2             -55.711     59.968  -0.929    0.353    
-x3             825.948     17.510  47.170   &lt;2e-16 ***
-x1:x2           20.431      1.159  17.631   &lt;2e-16 ***
----
-Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-Residual standard error: 24600 on 795 degrees of freedom
-Multiple R-squared:  0.8729,    Adjusted R-squared:  0.8722 
-F-statistic:  1364 on 4 and 795 DF,  p-value: &lt; 2.2e-16</code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>m3 <span class="sc">%&gt;%</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  broom<span class="sc">::</span><span class="fu">augment</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">x1 =</span> dvmisc<span class="sc">::</span><span class="fu">quant_groups</span>(x1, <span class="dv">3</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="fu">c</span>(x3, x2)) <span class="sc">%&gt;%</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># mutate(x3 = paste("x3", x3)) %&gt;%</span></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># mutate(x2 = dvmisc::quant_groups(x2, 2)) %&gt;%</span></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># mutate(x2 = paste("x2", x2)) %&gt;%</span></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> value, <span class="at">y =</span> .resid))<span class="sc">+</span></span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="co"># geom_smooth(aes(x = .fitted))+</span></span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>()<span class="sc">+</span></span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="fu">aes</span>(<span class="at">x =</span> value, <span class="at">y =</span> .resid), <span class="at">method =</span> <span class="st">"lm"</span>)<span class="sc">+</span></span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="fu">aes</span>(<span class="at">x =</span> value, <span class="at">y =</span> <span class="dv">0</span>), <span class="at">col =</span> <span class="st">"red"</span>, <span class="at">method =</span> <span class="st">"lm"</span>)<span class="sc">+</span></span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_grid</span>(<span class="fu">vars</span>(name), <span class="fu">vars</span>(x1))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<p><img src="partial_residual_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid" width="672"></p>
-</div>
-</div>
-<p>This gets more clear when plotting x3 as our bins and both x1 and x2 still vary.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>m3 <span class="sc">%&gt;%</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  broom<span class="sc">::</span><span class="fu">augment</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">x3 =</span> dvmisc<span class="sc">::</span><span class="fu">quant_groups</span>(x3, <span class="dv">3</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="fu">c</span>(x1, x2)) <span class="sc">%&gt;%</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># mutate(x3 = paste("x3", x3)) %&gt;%</span></span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># mutate(x2 = dvmisc::quant_groups(x2, 2)) %&gt;%</span></span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># mutate(x2 = paste("x2", x2)) %&gt;%</span></span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> value, <span class="at">y =</span> .resid))<span class="sc">+</span></span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  <span class="co"># geom_smooth(aes(x = .fitted))+</span></span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>()<span class="sc">+</span></span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="fu">aes</span>(<span class="at">x =</span> value, <span class="at">y =</span> .resid), <span class="at">method =</span> <span class="st">"lm"</span>)<span class="sc">+</span></span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="fu">aes</span>(<span class="at">x =</span> value, <span class="at">y =</span> <span class="dv">0</span>), <span class="at">col =</span> <span class="st">"red"</span>, <span class="at">method =</span> <span class="st">"lm"</span>)<span class="sc">+</span></span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_grid</span>(<span class="fu">vars</span>(name), <span class="fu">vars</span>(x3))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>m3 <span class="ot">&lt;-</span> <span class="fu">lm</span>(y1 <span class="sc">~</span> x1 <span class="sc">*</span> x2 <span class="sc">+</span> x3)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>m3 <span class="sc">%&gt;%</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  broom<span class="sc">::</span><span class="fu">augment</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">x1 =</span> dvmisc<span class="sc">::</span><span class="fu">quant_groups</span>(x1, <span class="dv">3</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="fu">c</span>(x3, x2)) <span class="sc">%&gt;%</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> value, <span class="at">y =</span> .resid))<span class="sc">+</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>()<span class="sc">+</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="fu">aes</span>(<span class="at">x =</span> value, <span class="at">y =</span> .resid), <span class="at">method =</span> <span class="st">"lm"</span>)<span class="sc">+</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="fu">aes</span>(<span class="at">x =</span> value, <span class="at">y =</span> <span class="dv">0</span>), <span class="at">col =</span> <span class="st">"red"</span>, <span class="at">method =</span> <span class="st">"lm"</span>)<span class="sc">+</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_grid</span>(<span class="fu">vars</span>(name), <span class="fu">vars</span>(x1))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <p><img src="partial_residual_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
-<p>If you are working with real data it might be helpful to use less bins and plot two of your three variables binned into quantiles.</p>
+<p>This becomes clearer when we plot x3, as our bins and both x1 and x2 still vary.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>m3 <span class="sc">%&gt;%</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  broom<span class="sc">::</span><span class="fu">augment</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">x3 =</span> dvmisc<span class="sc">::</span><span class="fu">quant_groups</span>(x3, <span class="dv">2</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">x3 =</span> <span class="fu">paste</span>(<span class="st">"x3"</span>, x3)) <span class="sc">%&gt;%</span></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">x2 =</span> dvmisc<span class="sc">::</span><span class="fu">quant_groups</span>(x2, <span class="dv">2</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">x2 =</span> <span class="fu">paste</span>(<span class="st">"x2"</span>, x2)) <span class="sc">%&gt;%</span></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> x1, <span class="at">y =</span> .resid))<span class="sc">+</span></span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># geom_smooth(aes(x = .fitted))+</span></span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>()<span class="sc">+</span></span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="fu">aes</span>(<span class="at">x =</span> x1, <span class="at">y =</span> .resid), <span class="at">method =</span> <span class="st">"lm"</span>)<span class="sc">+</span></span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="fu">aes</span>(<span class="at">x =</span> x1, <span class="at">y =</span> <span class="dv">0</span>), <span class="at">col =</span> <span class="st">"red"</span>, <span class="at">method =</span> <span class="st">"lm"</span>)<span class="sc">+</span></span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_grid</span>(<span class="fu">vars</span>(x2), <span class="fu">vars</span>(x3))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>m3 <span class="sc">%&gt;%</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  broom<span class="sc">::</span><span class="fu">augment</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">x3 =</span> dvmisc<span class="sc">::</span><span class="fu">quant_groups</span>(x3, <span class="dv">3</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="fu">c</span>(x1, x2)) <span class="sc">%&gt;%</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> value, <span class="at">y =</span> .resid))<span class="sc">+</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>()<span class="sc">+</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="fu">aes</span>(<span class="at">x =</span> value, <span class="at">y =</span> .resid), <span class="at">method =</span> <span class="st">"lm"</span>)<span class="sc">+</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="fu">aes</span>(<span class="at">x =</span> value, <span class="at">y =</span> <span class="dv">0</span>), <span class="at">col =</span> <span class="st">"red"</span>, <span class="at">method =</span> <span class="st">"lm"</span>)<span class="sc">+</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_grid</span>(<span class="fu">vars</span>(name), <span class="fu">vars</span>(x3))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <p><img src="partial_residual_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
-<p>While our residuals are currently centered to our model predictions, but can also plot the model adding back the fitted values from the augment ouput back to residuals. This allows us to plot our predicted slopes for the two way interaction the thus the effects of the third variables on that slopes. In other words we can interpret how our two way interaction varies across our third variable e.g.&nbsp;x1 and x2 vary across x3.</p>
+<p>If you are working with real data, it may be helpful to use fewer bins and plot two of your three variables binned into quantiles.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>m3 <span class="sc">%&gt;%</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  broom<span class="sc">::</span><span class="fu">augment</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">.resid =</span> .fitted <span class="sc">+</span> .resid) <span class="sc">%&gt;%</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">x3 =</span> dvmisc<span class="sc">::</span><span class="fu">quant_groups</span>(x3, <span class="dv">2</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">x3 =</span> <span class="fu">paste</span>(<span class="st">"x3"</span>, x3)) <span class="sc">%&gt;%</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">x2 =</span> dvmisc<span class="sc">::</span><span class="fu">quant_groups</span>(x2, <span class="dv">2</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">x2 =</span> <span class="fu">paste</span>(<span class="st">"x2"</span>, x2)) <span class="sc">%&gt;%</span></span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> x1, <span class="at">y =</span> .resid))<span class="sc">+</span></span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  <span class="co"># geom_smooth(aes(x = .fitted))+</span></span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>()<span class="sc">+</span></span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="fu">aes</span>(<span class="at">x =</span> x1, <span class="at">y =</span> .resid), <span class="at">method =</span> <span class="st">"lm"</span>)<span class="sc">+</span></span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="fu">aes</span>(<span class="at">x =</span> x1, <span class="at">y =</span> .fitted), <span class="at">col =</span> <span class="st">"red"</span>, <span class="at">method =</span> <span class="st">"lm"</span>)<span class="sc">+</span></span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_grid</span>(<span class="fu">vars</span>(x2), <span class="fu">vars</span>(x3))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>m3 <span class="sc">%&gt;%</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  broom<span class="sc">::</span><span class="fu">augment</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">x3 =</span> dvmisc<span class="sc">::</span><span class="fu">quant_groups</span>(x3, <span class="dv">2</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">x2 =</span> dvmisc<span class="sc">::</span><span class="fu">quant_groups</span>(x2, <span class="dv">2</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> x1, <span class="at">y =</span> .resid))<span class="sc">+</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>()<span class="sc">+</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="fu">aes</span>(<span class="at">x =</span> x1, <span class="at">y =</span> .resid), <span class="at">method =</span> <span class="st">"lm"</span>)<span class="sc">+</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="fu">aes</span>(<span class="at">x =</span> x1, <span class="at">y =</span> <span class="dv">0</span>), <span class="at">col =</span> <span class="st">"red"</span>, <span class="at">method =</span> <span class="st">"lm"</span>)<span class="sc">+</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_grid</span>(<span class="fu">vars</span>(x2), <span class="fu">vars</span>(x3))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <p><img src="partial_residual_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
-</section>
-<section id="beyond-reversed-engeneering" class="level1">
-<h1>Beyond reversed engeneering</h1>
-<p>In all of our plots so far we displayed the residuals of our model against a variables that is itself already a independent variable in the model. However we do not need to. This allows us plot a variable against our response variable while controlling for another variable.</p>
-<p>For example we might be interested in including x1 into the model. Thus we only want plot x1 against y, while controlling for x2. In comparison to added variable plots, subtracting out the predictor variable and fitting a visual regression to those residuals is not only a approximation of the regression slope, but rather a accurate estimation. By using the same methods we used above, e.g.&nbsp;binning the other variable x2 we can also spot interactions before even fitting x1 into the model.</p>
+<p>Whilst our residuals are currently centred on our model predictions, we can also plot the model adding back the fitted values from the augment ouput to the residuals. This allows us to plot our predicted slopes for the two way interaction and thus the effects of the third variables on those slopes. In other words, we can interpret how our two-way interaction varies with our third variable, e.g.&nbsp;x1 and x2 vary with x3.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>y_av <span class="ot">&lt;-</span> <span class="dv">300</span> <span class="sc">-</span> (<span class="fl">0.2</span> <span class="sc">*</span> x1) <span class="sc">+</span> (<span class="fl">0.2</span> <span class="sc">*</span> x3) <span class="sc">+</span> (<span class="fl">0.2</span> <span class="sc">*</span> x2) <span class="sc">+</span> (<span class="fl">0.2</span> <span class="sc">*</span> x1 <span class="sc">*</span> x2) <span class="sc">+</span> error</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>m4 <span class="ot">&lt;-</span> <span class="fu">lm</span>(y_av <span class="sc">~</span> x1 <span class="sc">+</span> x2 <span class="sc">+</span> x3)</span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>m4 <span class="sc">%&gt;%</span></span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  broom<span class="sc">::</span><span class="fu">augment</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">.resid =</span> .resid <span class="sc">+</span> m0<span class="sc">$</span>coef[[<span class="st">"x1"</span>]] <span class="sc">*</span> x1) <span class="sc">%&gt;%</span></span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">x2 =</span> dvmisc<span class="sc">::</span><span class="fu">quant_groups</span>(x2, <span class="dv">3</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> x1, <span class="at">y =</span> .resid))<span class="sc">+</span></span>
-<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>()<span class="sc">+</span></span>
-<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>)<span class="sc">+</span></span>
-<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="fu">vars</span>(x2))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>m3 <span class="sc">%&gt;%</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  broom<span class="sc">::</span><span class="fu">augment</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">.resid =</span> .fitted <span class="sc">+</span> .resid) <span class="sc">%&gt;%</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">x3 =</span> dvmisc<span class="sc">::</span><span class="fu">quant_groups</span>(x3, <span class="dv">2</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">x2 =</span> dvmisc<span class="sc">::</span><span class="fu">quant_groups</span>(x2, <span class="dv">2</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> x1, <span class="at">y =</span> .resid))<span class="sc">+</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>()<span class="sc">+</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="fu">aes</span>(<span class="at">x =</span> x1, <span class="at">y =</span> .resid), <span class="at">method =</span> <span class="st">"lm"</span>)<span class="sc">+</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="fu">aes</span>(<span class="at">x =</span> x1, <span class="at">y =</span> .fitted), <span class="at">col =</span> <span class="st">"red"</span>, <span class="at">method =</span> <span class="st">"lm"</span>)<span class="sc">+</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_grid</span>(<span class="fu">vars</span>(x2), <span class="fu">vars</span>(x3))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <p><img src="partial_residual_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 </section>
+<section id="beyond-reverse-engineering" class="level1">
+<h1>Beyond reverse engineering</h1>
+<p>In all of our plots so far, we have shown the residuals of our model against a variable that is already an independent variable in the model. However, we do not need to do this. This allows us to plot a variable against our response variable while controlling for another variable.</p>
+<p>For example, we might be interested in including x1 in the model. So we just want to plot x1 against y while controlling for x2. Compared to plots with added variables, subtracting the predictor variable and fitting a visual regression to these residuals is not just an approximation of the regression slope, but rather an accurate estimate. Using the same methods as above, e.g.&nbsp;binning the other variable x2, we can also detect interactions before even fitting x1 into the model.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>m4 <span class="ot">&lt;-</span> <span class="fu">lm</span>(y_av <span class="sc">~</span> x1 <span class="sc">+</span> x2 <span class="sc">+</span> x3)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>m4 <span class="sc">%&gt;%</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  broom<span class="sc">::</span><span class="fu">augment</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">.resid =</span> .resid <span class="sc">+</span> m0<span class="sc">$</span>coef[[<span class="st">"x1"</span>]] <span class="sc">*</span> x1) <span class="sc">%&gt;%</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">x2 =</span> dvmisc<span class="sc">::</span><span class="fu">quant_groups</span>(x2, <span class="dv">3</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> x1, <span class="at">y =</span> .resid))<span class="sc">+</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>()<span class="sc">+</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>)<span class="sc">+</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="fu">vars</span>(x2))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="partial_residual_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
 <section id="additional-notes" class="level1">
 <h1>Additional notes</h1>
-<p>That were a lot of scatter plots. Keep in mind that it can be helpful to scale and center your variables for plotting.</p>
+<p>That was a lot of scatterplotting. Remember that it can be helpful to scale and centre your variables for plotting.</p>
 </section>
 <section id="literature" class="level1">
 <h1>Literature</h1>
-<p>Fife, D. (2021, May 17). Visual Partitioning for Multivariate Models: An approach for identifying and visualizing complex multivariate dataset. https://doi.org/10.31234/osf.io/avu2n</p>
+<p>Fife, D. (2021). Visual Partitioning for Multivariate Models: An approach for identifying and visualizing complex multivariate dataset. https://doi.org/10.31234/osf.io/avu2n</p>
 
 
 </section>
