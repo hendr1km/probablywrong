@@ -2,6 +2,7 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/partial_resdual/partial_residual.html",
       "/posts/network/network.html",
       "/posts/weights/logistic_sim.html"
     ]
